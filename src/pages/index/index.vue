@@ -2,7 +2,7 @@
   <div class="container">
 
     <div id="loading" v-if="indicate">
-      <img src="../../../static/imgs/loading1.gif">
+      <img src="/static/imgs/newLoading.svg">
     </div>
 
     <div class="swiper-wrap">
@@ -65,6 +65,10 @@
       </a>
     </div>
 
+    <div v-show="!showPull">上拉加载更多</div>
+
+    <div v-show="showPull">正在加载更多</div>
+
   </div>
 </template>
 
@@ -81,7 +85,8 @@
         swiperArr: [],
         frontBookList: [],
         afterBookList: [],
-        indicate:true
+        indicate:true,
+        showPull:false
       };
     },
     methods: {
@@ -97,11 +102,16 @@
           this.afterBookList = res.data[1];
           this.indicate = false
         });
-      }
+      },
     },
     created() {
       this.getSwiper();
       this.getBookInfo();
+    },
+    onUnload(){
+      this.swiperArr = "";
+      this.frontBookList = "";
+      this.afterBookList = "";
     },
     onPullDownRefresh() {
       wx.setBackgroundTextStyle({
@@ -119,6 +129,11 @@
         })
       }
     },
+    onReachBottom () {
+      // console.log(123);
+      this.showPull = true;
+
+    }
   };
 </script>
 
@@ -132,8 +147,8 @@
     z-index: 999;
     background: #fff;
     img{
-      width: 600rpx;
-      height: 800rpx;
+      width: 200rpx;
+      height: 200rpx;
       position: absolute;
       left: 50%;
       top: 50%;

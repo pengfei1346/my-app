@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div id="loading" v-if="indicate">
-      <img src="../../../static/imgs/loading1.gif">
+      <img src="/static/imgs/newLoading.svg">
     </div>
 
     <div class="title" v-for="(item,index) in catalogueArr" :key="index">
@@ -33,8 +33,12 @@
       }
     },
     onLoad(options) {
+      this.indicate = true;
       this.bookId = options.id;
       this.getBook();
+    },
+    onUnload(){
+      this.catalogueArr = ""
     },
     onPullDownRefresh() {
       wx.stopPullDownRefresh();
@@ -52,8 +56,8 @@
     z-index: 999;
     background: #fff;
     img{
-      width: 600rpx;
-      height: 800rpx;
+      width: 200rpx;
+      height: 200rpx;
       position: absolute;
       left: 50%;
       top: 50%;

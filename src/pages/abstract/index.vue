@@ -1,49 +1,54 @@
 <template>
   <div class="container">
-    <div id="loading" v-if="indicate">
-      <img src="../../../static/imgs/loading1.gif">
+    <div id="loading" v-show="indicate">
+      <img src="/static/imgs/newLoading.svg">
     </div>
 
-    <div class="book">
-      <div class="book-img">
-        <img :src="severBook.img">
+    <div v-if="!indicate">
+      <div class="book">
+        <div class="book-img">
+          <img :src="severBook.img">
+        </div>
+
+        <div class="book-introduce">
+          <div class="book-title">{{severBook.title}}</div>
+          <div>作者:{{severBook.author}}</div>
+          <div>{{severBook.looknums}}人在看</div>
+          <div>{{severBook.startsnums}}人喜欢</div>
+        </div>
       </div>
 
-      <div class="book-introduce">
-        <div class="book-title">{{severBook.title}}</div>
-        <div>作者:{{severBook.author}}</div>
-        <div>{{severBook.looknums}}人在看</div>
-        <div>{{severBook.startsnums}}人喜欢</div>
+      <div class="share-box">
+        <button class='collect' @click="handleCollect">{{collectShow? "加入收藏":"已收藏"}}</button>
+        <button class='collect' open-type="share">分享好友</button>
+        <button class='collect'>分享朋友圈</button>
+        <!--<div class="collect">加入收藏</div>-->
+        <!--<div class="collect">分享好友</div>-->
+        <!--<div class="collect">分享朋友圈</div>-->
+      </div>
+
+      <div class="letter">
+        <div id="letter-title">简介</div>
+        <div id="letter-content">{{severBook.desc}}</div>
+      </div>
+
+      <div class="look">
+        <div>
+          <a :href="'/pages/catalogue/main?id='+ bookId">
+            <span id="left">查看目录</span>
+            <span id="middle">共{{catalogue}}章</span>
+          </a>
+        </div>
+        <div id="right">更新于2天前 ></div>
+      </div>
+
+      <div class="foot">
+        <a :href="'/pages/catalogue/main?id='+ bookId">
+          <div id="read">阅读该书籍</div>
+        </a>
       </div>
     </div>
 
-    <div class="share-box">
-      <button class='collect'>加入收藏</button>
-      <button class='collect' open-type="share">分享好友</button>
-      <button class='collect'>分享朋友圈</button>
-      <!--<div class="collect">加入收藏</div>-->
-      <!--<div class="collect">分享好友</div>-->
-      <!--<div class="collect">分享朋友圈</div>-->
-    </div>
-
-    <div class="letter">
-      <div id="letter-title">简介</div>
-      <div id="letter-content">{{severBook.desc}}</div>
-    </div>
-
-    <div class="look">
-      <div>
-        <span id="left">查看目录</span>
-        <span id="middle">共{{catalogue}}章</span>
-      </div>
-      <div id="right">更新于2天前 ></div>
-    </div>
-
-    <div class="foot">
-      <a :href="'/pages/catalogue/main?id='+ bookId">
-        <div id="read">阅读该书籍</div>
-      </a>
-    </div>
   </div>
 </template>
 
@@ -53,6 +58,7 @@
   export default {
     data () {
       return {
+        collectShow:true,
         indicate:true,
         bookId:"",
         severBook:"",
@@ -66,19 +72,49 @@
     methods:{
       getBookInfo() {
         fetch.get(`/book/${this.bookId}`).then(res => {
+          // console.log(res);
           this.severBook = res.data;
           this.catalogue = res.length;
-          this.indicate = false
+          this.indicate = false;
         });
       },
+      handleCollect () {
+        fetch.post(`/collection`,{bookId:this.bookId}).then(res => {
+          // console.log(res);
+          if (res.code == 200) {
+            wx.showToast({ title: '收藏成功', });
+            this.collectShow = false
+          } else {
+            wx.showToast({ title: '该书已经收藏', });
+          }
+        });
+      },
+      checkBook () {
+        fetch.get(`/collection?pn=2`).then(res => {
+          // console.log(res.data);
+          res.data.forEach(ca => {
+            // console.log(ca);
+          })
+
+        });
+      }
+    },
+    onShow () {
+      // this.checkBook()
     },
     onLoad (options) {
+      this.indicate = true;
       this.bookId = options.id
       this.getBookInfo()
     },
+    onUnload(){
+      this.indicate = false;
+      this.severBook = ""
+      this.catalogue = ""
+    },
     onShareAppMessage: function (ops) {
       if (ops.from === 'button') {
-        console.log(ops.target)
+        // console.log(ops.target)
       }
       return {
         title: this.severBook.title,
@@ -108,8 +144,8 @@
     z-index: 999;
     background: #fff;
     img{
-      width: 600rpx;
-      height: 800rpx;
+      width: 200rpx;
+      height: 200rpx;
       position: absolute;
       left: 50%;
       top: 50%;
@@ -204,8 +240,8 @@
       right: 4rpx;
       text-align: center;
       #read{
-        padding: 10rpx 0;
-        border-radius: 4px;
+        padding: 20rpx 0;
+        border-radius: 8px;
         width: 720rpx;
         font-size: 14px;
         color: #fff;

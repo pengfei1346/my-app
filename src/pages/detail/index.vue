@@ -1,38 +1,39 @@
 <template>
   <div class="container">
-    <!--<div id="loading" v-if="indicate">-->
-      <!--<img src="../../../static/imgs/loading1.gif">-->
-    <!--</div>-->
+    <div id="loading" v-if="indicate">
+      <img src="/static/imgs/newLoading.svg">
+    </div>
 
     <div class="title">{{catalogueDetail.title}}</div>
 
     <div :style="{fontSize: fontSize + 'px'}" class="all">
       <wemark :md="essay.content" link highlight
-              type="wemark"></wemark>
+              type="rich-text"></wemark>
     </div>
 
-    <div class="catalogue" v-if="isShow" @click="isShow = false">
+    <div class="mask" v-show="showMsk" @click="handleFet"></div>
 
-      <div class="left-box" @click.stop="isShow = true">
-        <div class="article-title">目录</div>
-        <div class="List" v-for="(item,index) in catalogueArr"
-             :key="index"
-             :index="item._id"
-             @click="handleJump(item._id)"
-             :style= "item._id ==catalogueId ? 'background:red':'' ">
-          {{item.title}}
-        </div>
+    <scroll-view  :style="{transform: 'translateX('+ trans +')',width:  widths + 'rpx'}"
+                  :scroll-y="true" class="catalogue">
+      <!--<div class="article-title">目录</div>-->
+      <div class="List" v-for="(item,index) in catalogueArr"
+           :key="index"
+           :index="item._id"
+           @click="handleJump(item._id)"
+           :style= "item._id ==catalogueId ? 'background:red':'' ">
+        {{item.title}}
       </div>
+    </scroll-view>
 
-      <div class="right-box"></div>
-    </div>
 
-    <div class="foot">
-      <div @click="advance" id="add">+</div>
-      <div @click="handleFet">目录</div>
-      <div @click="addSize">大</div>
-      <div @click="reduceSize">小</div>
-      <div @click="retreat" id="reduce">-</div>
+    <div class="footer">
+      <div @click="retreat" id="add">
+        <img src="/static/imgs/left.png">
+      </div>
+      <div @click="handleFet"><img src="/static/imgs/catalog.png"></div>
+      <div @click="addSize"><img src="/static/imgs/font-increase.png"></div>
+      <div @click="reduceSize"><img src="/static/imgs/font-decrease.png"></div>
+      <div @click="advance" id="reduce"><img src="/static/imgs/right.png"></div>
     </div>
   </div>
 </template>
@@ -48,24 +49,35 @@
         catalogueDetail: "",
         essay: "",
         catalogueArr: [],
-        isShow: false,
-        fontSize: 10,
+        fontSize: 12,
         dataIndex:"",
         indicate:true,
         background: "#fff",
-        title:""
+        title:"",
+        widths:0,
+        showMsk: false,
+        trans:"-600rpx"
       };
     },
+
     methods: {
       handleFet(){
-        this.isShow = true;
+        // console.log(this.widths);
+        this.showMsk = !this.showMsk;
+        if(this.showMsk){
+          this.trans = 0;
+          this.widths = "600";
+        } else {
+          this.trans = '-600rpx'
+        }
       },
       getDetail() {
         fetch.get(`/article/${this.catalogueId}`).then(res => {
+          // console.log(res.data);
           this.catalogueDetail = res.data;
           this.essay = res.data.article;
-          this.title = res.data.title
-          // this.indicate = false
+          this.title = res.data.title;
+          this.indicate = false;
         });
         this.getCatalogue();
       },
@@ -76,7 +88,6 @@
           this.catalogueArr.forEach(val => {
             if(val._id ==this.catalogueId){
               this.dataIndex=val.index;
-              // this.background = "#0ff"
             }
           })
 
@@ -88,37 +99,62 @@
       reduceSize(){
         this.fontSize -= 5
       },
-      advance(){
-        let nowIndex = this.dataIndex ++;
-        // console.log(nowIndex);
-        this.catalogueArr.forEach(val => {
-          if(val.index ==nowIndex){
-            // console.log(val._id);
-            this.catalogueId = val._id;
-            this.getDetail()
-          }
-        })
-      },
       retreat () {
-        let nowIndex = this.dataIndex --;
-        this.catalogueArr.forEach(val => {
-          if(val.index ==nowIndex){
-            this.catalogueId = val._id
-            this.getDetail()
-          }
-        })
+        let nowIndex = this.dataIndex - 1;
+
+        if(nowIndex <= -1){
+          wx.showToast({
+            title: '没有上一章了'
+          })
+        } else {
+          this.catalogueArr.forEach(val => {
+            if(val.index ==nowIndex){
+              this.catalogueId = val._id;
+              this.getDetail()
+            }
+          })
+        }
+      },
+      advance(){
+        let nowIndex = this.dataIndex + 1;
+        // console.log(nowIndex);
+        if(nowIndex >= this.catalogueArr.length   ){
+          wx.showToast({
+            title: '没有更多章节了'
+          })
+        } else {
+          this.catalogueArr.forEach(val => {
+            if(val.index ==nowIndex){
+              // console.log(val._id);
+              this.catalogueId = val._id;
+              this.getDetail()
+            }
+          })
+        }
+
       },
       handleJump(value){
+        this.widths = "0";
+        this.indicate = true;
+        this.handleFet();
         this.catalogueId = value;
         this.getDetail();
-        this.isShow = false;
       },
-
+    },
+    onShow(){
+      this.showMsk = false;
+      this.widths = "0";
     },
     onLoad(options) {
+      this.widths = "0";
+      this.trans = "-600rpx";
       this.catalogueId = options.id;
       this.bookId = options.bookId;
       this.getDetail();
+
+    },
+    onUnload(){
+      this.essay.content = ""
     },
     onPullDownRefresh() {
       wx.stopPullDownRefresh();
@@ -130,7 +166,7 @@
           title
         })
       }
-    }
+    },
   }
 </script>
 
@@ -145,8 +181,8 @@
     z-index: 999;
     background: #fff;
     img{
-      width: 600rpx;
-      height: 800rpx;
+      width: 200rpx;
+      height: 200rpx;
       position: absolute;
       left: 50%;
       top: 50%;
@@ -157,48 +193,37 @@
     padding: 0 16rpx;
   }
 
-  .catalogue {
-    display: flex;
+  .mask{
     position: fixed;
+    z-index: 200;
     left: 0;
     top: 0;
     bottom: 0;
     right: 0;
-
-    .left-box {
-      flex: 8;
-      padding-left: 30rpx;
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      overflow: scroll;
-      width: 80%;
-      background-color: #fff;
-      animation: move 2s ease;
-      @keyframes move {
-        0% {
-          transform: translateX(-80%);
-        }
-        100%{
-          transform: translateX(0);
-        }
-      }
-      .List {
-        margin: 20rpx 0;
-        font-size: 16px;
-      }
+    background-color: rgba(0,0,0,.4);
+  }
+  .catalogue {
+    transition: transform 2s ease;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 100rpx;
+    z-index: 998;
+    height: 100%;
+    background-color: #fff;
+    .article-title{
+      margin: 20rpx 14rpx;
+      color: #00f;
     }
-    .right-box{
-      flex: 1;
-      background-color: rgba(0, 0, 0, .4);
+    .List {
+      margin: 20rpx 14rpx;
+      font-size: 16px;
     }
   }
 
-  .foot {
+  .footer {
     font-size: 12px;
-    height: 70rpx;
-    line-height: 70rpx;
+    height: 100rpx;
     display: flex;
     justify-content: space-around;
     position: fixed;
@@ -207,13 +232,10 @@
     right: 0;
     background: #eee;
     z-index: 998;
-    #add{
-      text-align: center;
-      width: 80rpx;
-    }
-    #reduce{
-      text-align: center;
-      width: 80rpx;
+    img{
+      margin-top: 15rpx;
+      width: 70rpx;
+      height: 70rpx;
     }
   }
 </style>
