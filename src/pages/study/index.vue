@@ -3,10 +3,14 @@
     <div id="noLogin" v-if="showLogin">
       <img src="/static/imgs/catalog.png" alt="登录">
       <div id="login">登录后查看更多</div>
-      <div id="now">立即登录</div>
+      <div id="now" @click="handleLogin">立即登录</div>
     </div>
 
     <div id="isLogin" v-else="!showLogin">
+      <div id="loading" v-if="indicate">
+        <img src="/static/imgs/newLoading.svg">
+      </div>
+
       <div class="book" v-for="(item,index) in bookArr" :key="index">
 
         <div class="book-img">
@@ -39,6 +43,13 @@
 
       </div>
 
+      <div class="content" v-show="showArr">没有内容...</div>
+
+      <div class="pull-box" v-if="!showArr">
+        <div v-show="!isAll">{{showPull?"上拉加载更多...":"正在加载更多..."}}</div>
+        <div v-show="isAll">已经全部加载</div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -54,18 +65,61 @@
     data(){
       return{
         showLogin:true,
-        bookArr:[]
+        bookArr:[],
+        showArr:true,
+        indicate:true,
+        pn:1,
+        whether:true,
+        showPull:true,
+        isAll:false,
       }
     },
     methods:{
       getBooks () {
-        fetch.get('/readList').then(res => {
-          // console.log(res);
-          this.bookArr = res.data.map(item => {
-            item.percent = Math.floor( (item.title.index+1) / item.title.total * 100)
-            return item
-          })
+        this.userInfo = wx.getStorageSync('user');
+        if(this.userInfo) {
+          this.showLogin = false;
+        }
+        let pn = this.pn;
+        fetch.get(`/readList?pn=${pn}&size=5`).then(res => {
+          this.indicate = false;
+          if(res.data.length == 0){
+            if (this.pn=1) {
+              this.showArr = true;
+              this.whether = true;
+              this.isAll = true;
+            } else {
+              this.showArr = false;
+
+              this.whether = false;
+              this.isAll = true;
+            }
+          } else if(res.data.length < 5){
+            this.whether = false;
+            this.isAll = true;
+            this.showArr = false;
+            this.bookArr = this.bookArr.concat(res.data);
+
+            this.bookArr = this.bookArr.map(item => {
+              item.percent = Math.floor( (item.title.index+1) / item.title.total * 100)
+              return item
+            });
+          } else {
+            this.showPull = true;
+            this.bookArr = this.bookArr.concat(res.data);
+            this.showArr = false;
+            this.bookArr = this.bookArr.map(item => {
+              item.percent = Math.floor( (item.title.index+1) / item.title.total * 100)
+              return item
+            });
+          }
+
         });
+      },
+      handleLogin() {
+        wx.navigateTo({
+          url: '/pages/login/main'
+        })
       },
       handleContinue (val1,val2) {
         wx.navigateTo({
@@ -82,30 +136,60 @@
       this.getBooks();
       this.userInfo = wx.getStorageSync('user');
       if(this.userInfo) {
-        this.showLogin = false
+        this.showLogin = false;
       }
+    },
+    onUnload() {
+      this.bookArr = []
     },
     onPullDownRefresh () {
       wx.setBackgroundTextStyle({
         textStyle: 'dark',
       });
+      this.whether = true;
+      this.isAll = false;
+      this.pn = 1;
+      this.bookArr = [];
       this.getBooks();
+      this.indicate = true;
       wx.stopPullDownRefresh();
-      if(this.bookArr){
-        wx.stopPullDownRefresh();
-        wx.showToast({
-          title: '加载成功',
-        })
-      } else {
-        wx.showToast({
-          title: '加载失败',
-        })
+    },
+    onReachBottom () {
+      this.showPull = false;
+      if(this.whether ){
+        this.pn = this.pn + 1;
+        this.getBooks();
+        // console.log(this.pn);
       }
-    }
+    },
   };
 </script>
 
 <style scoped lang="less">
+  .pull-box{
+    height: 40rpx;
+    margin: 20rpx 0;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+  }
+  #loading{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: #fff;
+  img{
+    width: 200rpx;
+    height: 200rpx;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  }
   * {
     padding: 0;
     margin: 0;
@@ -131,6 +215,14 @@
     #isLogin {
       text-align: left;
       padding: 0 16rpx;
+      .content{
+        letter-spacing: 0.1rem;
+        padding-top: 50rpx;
+        font-size: 18px;
+        color: #888;
+        text-align: center;
+        margin: 0 auto;
+      }
       .book {
         height: 260rpx;
         margin-bottom: 30rpx;

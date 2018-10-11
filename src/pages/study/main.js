@@ -6,6 +6,7 @@ app.$mount();
 
 export default {
   config: {
-    "navigationBarTitleText": "我的学习"
+    navigationBarTitleText: "我的学习",
+    onReachBottomDistance:2
   }
 };

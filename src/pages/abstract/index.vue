@@ -21,10 +21,7 @@
       <div class="share-box">
         <button class='collect' @click="handleCollect">{{collectShow? "加入收藏":"已收藏"}}</button>
         <button class='collect' open-type="share">分享好友</button>
-        <button class='collect'>分享朋友圈</button>
-        <!--<div class="collect">加入收藏</div>-->
-        <!--<div class="collect">分享好友</div>-->
-        <!--<div class="collect">分享朋友圈</div>-->
+
       </div>
 
       <div class="letter">
@@ -39,7 +36,7 @@
             <span id="middle">共{{catalogue}}章</span>
           </a>
         </div>
-        <div id="right">更新于2天前 ></div>
+        <div id="right"><getTime :time="severBook.updateTime"></getTime></div>
       </div>
 
       <div class="foot">
@@ -54,14 +51,17 @@
 
 <script>
   import { fetch } from "@/utils/index.js";
-
+  import getTime from '../../components/getTime'
   export default {
+    components:{
+      getTime
+    },
     data () {
       return {
         collectShow:true,
         indicate:true,
         bookId:"",
-        severBook:"",
+        severBook:{},
         catalogue:"",
         tempFilePaths: '',
         userInfo: {},
@@ -71,8 +71,14 @@
     },
     methods:{
       getBookInfo() {
+        // console.log(this.bookId);
         fetch.get(`/book/${this.bookId}`).then(res => {
           // console.log(res);
+          if( res.isCollect == 1){
+            this.collectShow = false
+          } else {
+            this.collectShow = true
+          }
           this.severBook = res.data;
           this.catalogue = res.length;
           this.indicate = false;
@@ -89,22 +95,14 @@
           }
         });
       },
-      checkBook () {
-        fetch.get(`/collection?pn=2`).then(res => {
-          // console.log(res.data);
-          res.data.forEach(ca => {
-            // console.log(ca);
-          })
 
-        });
-      }
     },
     onShow () {
-      // this.checkBook()
+      // this.getBookInfo()
     },
     onLoad (options) {
       this.indicate = true;
-      this.bookId = options.id
+      this.bookId = options.id;
       this.getBookInfo()
     },
     onUnload(){
@@ -190,10 +188,10 @@
       justify-content: space-around;
       border-bottom: 4px solid #eee;
       .collect{
-        font-size: 14px;
+        font-size: 12px;
         background: #eee;
         border-radius: 4px;
-        padding: 8px 26px;
+        padding: 1px 10px;
       }
     }
 

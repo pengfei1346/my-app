@@ -36,17 +36,25 @@
 
               wx.login({
                 success: function(res) {
-                  fetch.post('/login',{code:res.code}).then(vl => {
+                  let secret="56782b2e89afaac2433c68641d63a7bd";
+                  let appid = "wx163afd49e7e3ecd9";
+                  fetch.post('/login',{code:res.code,secret,appid}).then(vl => {
                     // console.log(vl);
                     if(vl.code == 200){
                       wx.showToast({ title: '登录成功', });
-                      wx.navigateBack({ delta:1 })
                       wx.getUserInfo({
                         success: function(res) {
                           // this.userData = res.userInfo;
-                          wx.setStorageSync('user',res.userInfo)
+                          wx.setStorageSync('user',res.userInfo);
+                          wx.switchTab({
+                            url: '/pages/myCenter/main'
+                          });
                         }
-                      })
+                      });
+                      // wx.navigateBack({
+                      //   delta: 1
+                      // })
+
                     } else {
                       wx.showToast({
                         title: '登录失败',

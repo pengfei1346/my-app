@@ -27,7 +27,7 @@ export const fetch = {
       });
     });
   },
-  post(url, data) {
+  post(url, data, method='POST') {
     return new Promise((resolve, reject) => {
       let token = wx.getStorageSync('token')
       let header = {
@@ -39,7 +39,7 @@ export const fetch = {
 
       wx.request({
         url: baseUrl + url,
-        method: "POST",
+        method,
         data,
         header,
         success(res) {
@@ -53,5 +53,8 @@ export const fetch = {
         }
       });
     });
+  },
+  del(url, data) {
+    return this.post(url,data,'DELETE')
   }
 };

@@ -6,7 +6,7 @@
 
     <div v-if="indicate">
       <div class="top-box">
-        <a href="/pages/login/main">
+        <div class="login" @click="handleLogin">
           <div class="left">
             <img src="/static/imgs/yun.jpg" id="img1" v-if="wetherShow">
             <img :src="userInfo.avatarUrl" id="img2" v-else="!wetherShow">
@@ -18,10 +18,10 @@
             <div v-if="wetherShow">立即登录，开启您的云档之路</div>
             <div v-else="!wetherShow">这家伙很懒，什么也没留下</div>
           </div>
-        </a>
+        </div>
 
         <div class="fans" v-if="!wetherShow">
-          <div>
+          <div @click="hanleCollection">
             <div>3</div>
             <div>收藏</div>
           </div>
@@ -42,26 +42,6 @@
           <img src="/static/imgs/yun.jpg">
         </div>
         <div>云书 2.0</div>
-        <!--<a href="">-->
-          <!--<img src="/static/imgs/admin.png">-->
-          <!--<div>扫一扫</div>-->
-        <!--</a>-->
-        <!--<a href="">-->
-          <!--<img src="/static/imgs/admin.png">-->
-          <!--<div>文档中心</div>-->
-        <!--</a>-->
-        <!--<a href="">-->
-          <!--<img src="/static/imgs/admin.png">-->
-          <!--<div>钱包</div>-->
-        <!--</a>-->
-        <!--<a href="">-->
-          <!--<img src="/static/imgs/admin.png">-->
-          <!--<div>我的订单</div>-->
-        <!--</a>-->
-        <!--<a href="">-->
-          <!--<img src="/static/imgs/admin.png">-->
-          <!--<div>反馈建议</div>-->
-        <!--</a>-->
       </div>
     </div>
 
@@ -85,13 +65,33 @@
         } else {
           this.wetherShow = true
         }
+      },
+      handleLogin() {
+        if (!this.userInfo) {
+          wx.navigateTo({
+            url: '/pages/login/main'
+          })
+        } else {
+          wx.showToast({
+            title: '不能重复登录'
+          })
+        }
+
+      },
+      hanleCollection() {
+        wx.navigateTo({
+          url: '/pages/collection/main'
+        })
       }
     },
     onLoad(){
       this.getUser()
     },
     onShow(){
-      this.getUser()
+      this.getUser();
+    },
+    mounted () {
+      this.getUser();
     }
   };
 </script>
@@ -123,7 +123,7 @@
       padding: 30rpx 0 0 0;
       height: 160rpx;
       background: #1984d2;
-      a{
+      .login{
         display: flex;
         justify-content: left;
         color: #fff;

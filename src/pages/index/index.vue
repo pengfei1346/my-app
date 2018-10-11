@@ -23,59 +23,55 @@
       </swiper>
     </div>
 
-    <div class="title">| 前端开发</div>
+    <div class="classify-box" v-for="(item,value) in classifyArr" :key="value">
+      <div class="title">
+        <div>| {{item.title}}</div>
+        <div id="more" @click="handleMore(item._id)">更多 > </div>
+      </div>
 
-    <div class="book" v-for="(item,index) in frontBookList.books" :key="index">
-      <a :href="'/pages/abstract/main?id='+ item._id">
-        <div class="book-img">
-          <img :src="item.img">
-        </div>
-        <div class="book-introduce">
-          <div class="book-box">
-            <div class="book-title">{{item.title}}</div>
-            <div class="book-content">{{item.desc}}</div>
-          </div>
+      <div class="book" v-for="(list,index) in item.books" :key="index">
 
-          <div class="book-time">
-            <div class="left">{{item.author}}</div>
-            <div class="right">两天前 前端开发 {{item.looknums}}人在看</div>
-          </div>
-        </div>
-      </a>
+          <a :href="'/pages/abstract/main?id='+ list._id">
+            <div class="book-img">
+              <img :src="list.img">
+            </div>
+            <div class="book-introduce">
+              <div class="book-box">
+                <div class="book-title">{{list.title}}</div>
+                <div class="book-content">{{list.desc}}</div>
+              </div>
+
+              <div class="book-time">
+                <div class="right">{{list.author}}</div>
+                <div class="right">
+                  <getTime :time="list.updateTime"></getTime>
+                </div>
+                <div class="right">{{item.title}}</div>
+                <div class="right">{{list.looknums}}人在看</div>
+              </div>
+            </div>
+          </a>
+
+      </div>
+
     </div>
 
-    <div class="title">| 后端开发</div>
-
-    <div class="book" v-for="(item,index) in afterBookList.books" :key="index">
-      <a :href="'/pages/abstract/main?id='+ item._id">
-        <div class="book-img">
-          <img :src="item.img">
-        </div>
-        <div class="book-introduce">
-          <div class="book-box">
-            <div class="book-title">{{item.title}}</div>
-            <div class="book-content">{{item.desc}}</div>
-          </div>
-
-          <div class="book-time">
-            <div class="left">{{item.author}}</div>
-            <div class="right">两天前 前端开发 {{item.looknums}}人在看</div>
-          </div>
-        </div>
-      </a>
+    <div class="pull-box" v-show="!showArr">
+      <div v-show="!isAll">{{showPull?"上拉加载更多...":"正在加载更多..."}}</div>
+      <div v-show="isAll">已经全部加载</div>
     </div>
-
-    <div v-show="!showPull">上拉加载更多</div>
-
-    <div v-show="showPull">正在加载更多</div>
 
   </div>
 </template>
 
 <script>
   import { fetch } from "@/utils/index.js";
+  import getTime from '../../components/getTime'
 
   export default {
+    components:{
+      getTime
+    },
     data() {
       return {
         indicatorDots: true,
@@ -83,10 +79,13 @@
         interval: 5000,
         duration: 1000,
         swiperArr: [],
-        frontBookList: [],
-        afterBookList: [],
         indicate:true,
-        showPull:false
+        classifyArr: [],
+        pn:1,
+        size:2,
+        showPull:true,
+        isAll:false,
+        whether:true,
       };
     },
     methods: {
@@ -97,12 +96,34 @@
         });
       },
       getBookInfo() {
-        fetch.get("/category/books").then(res => {
-          this.frontBookList = res.data[0];
-          this.afterBookList = res.data[1];
-          this.indicate = false
+        let pn = this.pn;
+        fetch.get(`/category/books?pn=${pn}&size=2&booksSize=3`).then(res => {
+          // console.log(res.data);
+          this.indicate = false;
+          if(res.data.length == 0){
+              this.showArr = false;
+              this.whether = false;
+              this.isAll = true;
+
+          } else if(res.data.length < 2){
+            this.showArr = false;
+            this.isAll = true;
+            this.whether = false;
+            this.classifyArr = this.classifyArr.concat(res.data);
+          } else {
+            this.showArr = false;
+            this.showPull = true;
+            this.classifyArr = this.classifyArr.concat(res.data);
+            // console.log(this.bookArr);
+          }
         });
+
       },
+      handleMore(val) {
+        wx.navigateTo({
+          url: '/pages/more/main?id=' + val,
+        })
+      }
     },
     created() {
       this.getSwiper();
@@ -130,9 +151,12 @@
       }
     },
     onReachBottom () {
-      // console.log(123);
-      this.showPull = true;
-
+      // console.log(this.whether);
+      this.showPull = false;
+      if(this.whether){
+        this.pn = this.pn + 1;
+        this.getBookInfo()
+      }
     }
   };
 </script>
@@ -169,67 +193,81 @@
         }
       }
     }
-    .title {
-      margin: 14px 0;
-      font-size: 14px;
-      font-weight: 700;
-      font-family: Fantasy;
-      color: #000;
-      letter-spacing: 4rpx;
-    }
-    .book {
-      height: 260rpx;
-      margin-bottom: 10px;
-
-      a{
+    .classify-box{
+      .title {
         display: flex;
-
-        .book-img {
-          width: 220rpx;
-          height: 260rpx;
-          img {
-            width: 220rpx;
-            height: 260rpx;
-          }
-        }
-
-        .book-introduce {
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          /*height: 110rpx;*/
-          margin-left: 24rpx;
-          color: #555;
-          font-size: 12px;
-          line-height: 20px;
-          letter-spacing: 2rpx;
-          .book-box{
-            .book-title {
-              color: #000;
-              width: 205px;
-              font-size: 12px;
-            }
-            .book-content {
-              margin: 10px 0;
-              height: 80rpx;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-            }
-          }
-          .book-time {
-            display: flex;
-            justify-content: space-between;
-            .right {
-              /*width: 170px;*/
-              margin-right: 4rpx;
-            }
-          }
+        justify-content: space-between;
+        margin: 14px 0;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: Fantasy;
+        color: #000;
+        letter-spacing: 4rpx;
+        #more{
+          font-weight: 100;
+          color: #222;
+          font-size: 10px;
         }
       }
+      .book {
+        height: 260rpx;
+        margin-bottom: 10px;
 
+        a{
+          display: flex;
+
+          .book-img {
+            width: 220rpx;
+            height: 260rpx;
+            img {
+              width: 220rpx;
+              height: 260rpx;
+            }
+          }
+
+          .book-introduce {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /*height: 110rpx;*/
+            margin-left: 24rpx;
+            color: #555;
+            font-size: 12px;
+            line-height: 20px;
+            letter-spacing: 2rpx;
+            .book-box{
+              .book-title {
+                color: #000;
+                width: 205px;
+                font-size: 12px;
+              }
+              .book-content {
+                margin: 10px 0;
+                height: 80rpx;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+              }
+            }
+            .book-time {
+              display: flex;
+              justify-content: space-between;
+              .right {
+                margin-right: 4rpx;
+              }
+            }
+          }
+        }
+
+      }
+    }
+    .pull-box{
+      margin-top: 20rpx;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
     }
   }
 </style>

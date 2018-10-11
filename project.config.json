@@ -10,7 +10,7 @@
 	"miniprogramRoot": "./dist/",
 	"compileType": "miniprogram",
 	"appid": "wx163afd49e7e3ecd9",
-	"projectname": "my-app",
+	"projectname": "last-app",
 	"condition": {
 		"search": {
 			"current": -1,

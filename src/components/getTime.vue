@@ -52,7 +52,7 @@
           const year = time.getFullYear()
           const months  = time.getMonth()
           const day = time.getDate()
-          return this.str = `${year}年${months}${day}`
+          return this.str = `${year}年${months}月${day}日`
         }
       }
     },

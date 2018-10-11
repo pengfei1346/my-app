@@ -6,6 +6,6 @@ app.$mount();
 
 export default {
   config: {
-    navigationBarTitleText: "云书",
+    "navigationBarTitleText": "分类列表"
   }
 };

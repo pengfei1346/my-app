@@ -203,12 +203,12 @@
     background-color: rgba(0,0,0,.4);
   }
   .catalogue {
-    transition: transform 2s ease;
+    transition: transform .5s ease;
     position: fixed;
     left: 0;
     top: 0;
-    bottom: 100rpx;
-    z-index: 998;
+    bottom: 0 ;
+    z-index: 999;
     height: 100%;
     background-color: #fff;
     .article-title{
